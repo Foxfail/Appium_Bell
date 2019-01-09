@@ -1,10 +1,11 @@
 package com.foxfail.appium_bell;
 
-import android.annotation.SuppressLint;
-
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -15,18 +16,25 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.AndroidKeyCode;
 
+// Запускаю тесты в определенном порядке
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AppiumTest {
     private static WebDriver driver;
     private static AndroidDriver androidDriver;
+    // данные контакта для тестов
+    private final String CONTACT_FIRST_NAME = "Vitaly";
+    private final String CONTACT_LAST_NAME = "Dorofeev";
+    private final String CONTACT_PHONE_NUMBER = "12345678";
     String TAG = this.getClass().getSimpleName();
 
     @BeforeClass
     public static void setUp() throws MalformedURLException {
-        System.out.println("setUp: ");
+        System.out.println("setUp: start");
         // устанавливаем capabilities для Appium
         DesiredCapabilities capabilities = new DesiredCapabilities();
 //        capabilities.setCapability("BROWSER_NAME", "Android");
@@ -34,43 +42,42 @@ public class AppiumTest {
         capabilities.setCapability("platformName", "Android");
         capabilities.setCapability("deviceName", "Nexus_5X_API_26");
 
-        // Имя of the package которую хотим запустить
+        // Имя of the package которую запускаю запустить
         capabilities.setCapability("appPackage", "com.android.contacts");
 
         // Main Activity of the package которую запускаем
         capabilities.setCapability("appActivity", "com.android.contacts.activities.PeopleActivity");
 
         //Create RemoteWebDriver instance and connect to the Appium server
-        //It will launch the Calculator App in Android Device using the configurations
-        //specified in Desired Capabilities
+        //driver = new RemoteWebDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
+
         androidDriver = new AndroidDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
         driver = androidDriver;
-//        driver = new RemoteWebDriver(new URL("http://127.0.0.1:4723/wd/hub"), capabilities);
-
-
+        System.out.println("setUp: stop");
     }
 
     @AfterClass
     public static void teardown() {
-        System.out.println("teardown: ");
-        //close the app
+        System.out.println("teardown: start");
         try {
             driver.quit();
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            System.out.println("\tWebDriver не получилось закрыть");
         }
+
+        System.out.println("teardown: stop");
     }
 
-    @SuppressLint("Assert")
+
     @Test
-    public void testNewContact() {
+    public void test1NewContact() {
         System.out.println("testNewContact: start");
         try {
             // если просит зайти в аккаунт гугл
             WebElement skip_button = driver.findElement(By.xpath("//android.widget.Button[@resource-id=\"com.google.android.gsf.login:id/skip_button\"]"));
             if (skip_button != null) skip_button.click();
         } catch (Exception e) {
-            System.out.println("Пропущен шаг: пропуск логина в гугл аккаунт");
+            System.out.println("\tПропущен шаг: пропуск логина в гугл аккаунт. Это нормально");
         }
 
 
@@ -84,7 +91,7 @@ public class AppiumTest {
         }
         create_button.click();
 
-//        // тест
+//        // тест для себя
 //        try {
 //        WebElement test_button = driver.findElement(By.xpath("//android.widget.Button[@resource-id=\"com.android.contacts:id/let_but\"]"));
 //        if (test_button!=null)test_button.click();
@@ -94,7 +101,7 @@ public class AppiumTest {
 
         try {
             //ожидаем появления сообщения
-//            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+            // driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
             //в интернете пишут что так ждать ещё лучше
             WebDriverWait waitDriver = new WebDriverWait(driver, 20);
@@ -104,50 +111,72 @@ public class AppiumTest {
             WebElement savelocal_button = driver.findElement(By.xpath("//android.widget.Button[@resource-id=\"com.android.contacts:id/left_button\"]"));
             savelocal_button.click();
         } catch (Exception e) {
-            System.out.println("Пропущен шаг: сохранить контакт локально(ещё один вход в гугл аккаунт)");
+            System.out.println("\tПропущен шаг: сохранить контакт локально(ещё один вход в гугл аккаунт). Это нормально");
         }
 
 
-        // ищем поле ввода по тексту в нем
-        WebElement firstname_edittext = driver.findElement(By.xpath("//android.widget.EditText[contains(@text,'First name')]"));
-        firstname_edittext.clear();
-        firstname_edittext.sendKeys("Vitaly");
+        // ИМЯ
+        WebElement firstname_edittext = driver.findElement(By.xpath("//android.widget.EditText[contains(@text,'First name')]")); // ищем поле ввода по тексту в нем
 
+        firstname_edittext.clear();
+//        androidDriver.getKeyboard().sendKeys(CONTACT_FIRST_NAME);
+        firstname_edittext.sendKeys(CONTACT_FIRST_NAME);
+
+        // ФАМИЛИЯ
         WebElement lastname_edittext = driver.findElement(By.xpath("//android.widget.EditText[contains(@text,'Last name')]"));
         lastname_edittext.clear();
-        lastname_edittext.sendKeys("Dorofeev");
+        lastname_edittext.sendKeys(CONTACT_LAST_NAME);
 
+        // ТЕЛЕФОН
         androidDriver.pressKeyCode(AndroidKeyCode.ENTER); // поле становится видимым и его можно найти
+//        androidDriver.hideKeyboard(); // можно еще спрятать клавиатуру
         WebElement phone_edittext = driver.findElement(By.xpath("//android.widget.EditText[contains(@text,'Phone')]"));
         phone_edittext.clear();
-        phone_edittext.sendKeys("12345678");
+        phone_edittext.sendKeys(CONTACT_PHONE_NUMBER);
 
+        // СОХРАНИТЬ
         WebElement save_button = driver.findElement(By.xpath("//android.widget.Button[@resource-id=\"com.android.contacts:id/editor_menu_save_button\"]"));
         save_button.click();
-
-        //код который можно удалить, но я буду в него подсматривать
-//        driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"com.android.contacts:id/add_organization_button\"]")).click();
-//        WebElement organization_layout = driver.findElement(By.xpath("//android.widget.LinearLayout[@resource-id=\"com.android.contacts:id/sect_fields\"]"));
-//        WebElement organization_edittext = organization_layout.findElements(By.xpath("//android.widget.LinearLayout[@resource-id=\"com.android.contacts:id/editors\"]")).get(0);
-//        organization_edittext.sendKeys("Bell Integrator");
-
-
-//        androidDriver.pressKeyCode(AndroidKeyCode.ENTER);
-//        androidDriver.pressKeyCode(AndroidKeyCode.ENTER);
-//        WebElement tel_edittext = driver.switchTo().activeElement();
-//        androidDriver.getKeyboard().sendKeys(new String[]{"123456"});
-
-//        WebElement tel_layout = organization_layout.findElement(By.xpath("//android.widget.LinearLayout")).findElement(By.xpath("//android.widget.LinearLayout[@resource-id=\"com.android.contacts:id/kind_editors\"]"));
-//        WebElement tel_edittext = tel_layout.findElements(By.xpath("//android.widget.EditText")).get(0);
-
-
-//        driver.findElement(By.id("com.android.contacts:id/create_contact_button")).click();
-
         System.out.println("testNewContact: stop");
     }
 
     @Test
-    public void testDeleteContact() {
+    public void test2DeleteContact() {
+        System.out.println("testDeleteContact: start");
+        androidDriver.launchApp();
+        driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"com.android.contacts:id/menu_search\"]")).click();
 
+        WebElement search_edittext = driver.findElement(By.xpath("//android.widget.EditText[@resource-id=\"com.android.contacts:id/search_view\"]"));
+        search_edittext.clear();
+        search_edittext.sendKeys(CONTACT_FIRST_NAME + " " + CONTACT_LAST_NAME);
+
+        // list в котором все найденные контакты. предполагаю что нам нужен первый, если вообще он найден
+        WebElement searchresults_list = driver.findElement(By.xpath("//android.widget.ListView[@resource-id=\"android:id/list\"]"));
+        List<WebElement> searchresultsListElements = searchresults_list.findElements(By.xpath("//*"));
+        // есть ли там вообще что то
+        // выдаем ошибку что ожидалось найти хоть один элемент
+        Assert.assertNotEquals(0, searchresultsListElements.size());
+        // если пошло дальше значит есть хоть один элемент
+
+        // щелкаем на первый элемент
+        WebElement firstListEntry = searchresultsListElements.get(0).findElement(By.xpath("//android.widget.TextView[@resource-id=\"com.android.contacts:id/cliv_name_textview\"]"));
+        firstListEntry.click();
+
+        //ждем появления элемента "меню"
+        WebDriverWait waitDriver = new WebDriverWait(driver, 20);
+        waitDriver.until(ExpectedConditions.elementToBeClickable(By.xpath("//android.widget.ImageButton[@content-desc='More options']")));
+
+        // щелкаем на меню
+        driver.findElement(By.xpath("//android.widget.ImageButton[@content-desc='More options']")).click();
+
+
+        // УДАЛИТЬ
+        driver.findElement(By.xpath("//android.widget.TextView[contains(@text,'Delete')]")).click();
+        // подтверждение
+        waitDriver.until(ExpectedConditions.elementToBeClickable(By.xpath("//android.widget.Button[@resource-id=\"android:id/button1\"]")));
+        driver.findElement(By.xpath("//android.widget.Button[@resource-id=\"android:id/button1\"]")).click();
+
+
+        System.out.println("testDeleteContact: stop");
     }
 }
