@@ -144,11 +144,18 @@ public class AppiumTest {
     public void test2DeleteContact() {
         System.out.println("testDeleteContact: start");
         androidDriver.launchApp();
+
+        // эти переменные будут использованы для сравнения имени
+        // которое мы искали с найденным которое мы хотим удалить
+        String actualContactName;
+        String nameToSearch;
+
         driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"com.android.contacts:id/menu_search\"]")).click();
 
         WebElement search_edittext = driver.findElement(By.xpath("//android.widget.EditText[@resource-id=\"com.android.contacts:id/search_view\"]"));
         search_edittext.clear();
-        search_edittext.sendKeys(CONTACT_FIRST_NAME + " " + CONTACT_LAST_NAME);
+        nameToSearch = CONTACT_FIRST_NAME + " " + CONTACT_LAST_NAME;
+        search_edittext.sendKeys(nameToSearch);
 
         // list в котором все найденные контакты. предполагаю что нам нужен первый, если вообще он найден
         WebElement searchresults_list = driver.findElement(By.xpath("//android.widget.ListView[@resource-id=\"android:id/list\"]"));
@@ -165,6 +172,12 @@ public class AppiumTest {
         //ждем появления элемента "меню"
         WebDriverWait waitDriver = new WebDriverWait(driver, 20);
         waitDriver.until(ExpectedConditions.elementToBeClickable(By.xpath("//android.widget.ImageButton[@content-desc='More options']")));
+
+        // ПРОВЕРКА
+        WebElement contact_name_textview = driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"com.android.contacts:id/large_title\"]"));
+        actualContactName = contact_name_textview.getText();
+        Assert.assertEquals("Что хотим удалить должно совпадать с тем что удаляем", nameToSearch, actualContactName);
+        // если проверка проходит то точно идем дальше
 
         // щелкаем на меню
         driver.findElement(By.xpath("//android.widget.ImageButton[@content-desc='More options']")).click();
